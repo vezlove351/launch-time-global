@@ -1,0 +1,17 @@
+const mockTokens = [
+  {
+    id: "1",
+    name: "Doge Coin",
+    symbol: "DOGE",
+    image: "/placeholder.svg?height=64&width=64",
+    description: "The original meme coin that started it all. Much wow!",
+    tokenAddress: "0x1234567890123456789012345678901234567890",
+    createdBy: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    fundingRaised: "$1,000,000",
+    isNew: true,
+    isPopular: true,
+    isTrending: false,
+    isMyToken: false
+  },
+  // ... other token objects ...
+]
