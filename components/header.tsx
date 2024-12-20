@@ -56,6 +56,11 @@ export function Header() {
                   AI Agents <span className="text-sm ml-4 bg-[#4F46E5] pl-2 pr-2 rounded-sm">next release</span>
                 </Link>
               </nav>
+              {isMounted && (
+                <div className="mt-4" suppressHydrationWarning>
+                  <ConnectButton client={client} />
+                </div>
+              )}
               <div className="mt-auto">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -85,11 +90,7 @@ export function Header() {
                   </div>
                 )}
               </div>
-              {isMounted && (
-                <div className="mt-4" suppressHydrationWarning>
-                  <ConnectButton client={client} />
-                </div>
-              )}
+            
             </SheetContent>
           </Sheet>
           <div className="hidden md:flex items-center space-x-8">
