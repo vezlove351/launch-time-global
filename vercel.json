@@ -1,0 +1,11 @@
+{
+    "functions": {
+      "app/api/generate-image/route.ts": {
+        "maxDuration": 60
+      }
+    },
+    "env": {
+      "NEXT_PUBLIC_IDEOGRAM_API_KEY": "@ideogram_api_key"
+    }
+  }
+  

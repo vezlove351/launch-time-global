@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
-  const { prompt } = await req.json()
-
-  if (!prompt) {
-    return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
-  }
-
-  const ideogramApiKey = process.env.NEXT_PUBLIC_IDEOGRAM_API_KEY
-
-  if (!ideogramApiKey) {
-    return NextResponse.json({ error: 'Ideogram API key is not configured' }, { status: 500 })
-  }
-
   try {
+    const { prompt } = await req.json()
+
+    if (!prompt) {
+      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
+    }
+
+    const ideogramApiKey = process.env.NEXT_PUBLIC_IDEOGRAM_API_KEY
+
+    if (!ideogramApiKey) {
+      console.error('Ideogram API key is not configured')
+      return NextResponse.json({ error: 'Ideogram API key is not configured' }, { status: 500 })
+    }
+
+    console.log('Sending request to Ideogram API...')
     const url = 'https://api.ideogram.ai/generate';
     const response = await fetch(url, {
       method: 'POST',
@@ -32,9 +34,9 @@ export async function POST(req: Request) {
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
+      const errorData = await response.text()
       console.error('Ideogram API error:', errorData)
-      return NextResponse.json({ error: `Ideogram API error: ${errorData.detail || 'Unknown error'}` }, { status: response.status })
+      return NextResponse.json({ error: `Ideogram API error: ${errorData}` }, { status: response.status })
     }
 
     const data = await response.json();
@@ -43,6 +45,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Ideogram API did not return an image URL' }, { status: 500 });
     }
 
+    console.log('Successfully generated image URL:', data.data[0].url)
     return NextResponse.json({ imageUrl: data.data[0].url })
   } catch (error) {
     console.error('Error generating image:', error)

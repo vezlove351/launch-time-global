@@ -20,6 +20,7 @@ interface Token {
   fundingRaised: string;
   tokenAddress: string;
   creatorAddress: string;
+  createdAt: number;
 }
 
 interface RawMemeToken {
@@ -30,9 +31,10 @@ interface RawMemeToken {
   fundingRaised: bigint;
   tokenAddress: string;
   creatorAddress: string;
+  createdAt: number;
 }
 
-type FilterType = 'all' | 'new' | 'popular' | 'trending' | 'myTokens'
+type FilterType = 'all' | 'new' | 'popular' | 'myTokens'
 
 function useAddress() {
   const [address, setAddress] = useState<string | null>(null)
@@ -59,7 +61,7 @@ export default function ExplorePage() {
   const [tokens, setTokens] = useState<Token[]>([])
   const [filteredTokens, setFilteredTokens] = useState<Token[]>([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all')
+  const [activeFilter, setActiveFilter] = useState<FilterType>('new')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
@@ -88,7 +90,8 @@ export default function ExplorePage() {
           creatorAddress: token.creatorAddress,
           description: token.description,
           fundingRaised: ethers.formatEther(token.fundingRaised),
-          tokenAddress: token.tokenAddress
+          tokenAddress: token.tokenAddress,
+          createdAt: token.createdAt,
         }))
 
         setTokens(formattedTokens)
@@ -116,10 +119,21 @@ export default function ExplorePage() {
   useEffect(() => {
     let filtered = tokens
 
-    if (activeFilter === 'myTokens' && address) {
-      filtered = tokens.filter((token) => 
-        token.creatorAddress.toLowerCase() === address.toLowerCase()
-      )
+    switch (activeFilter) {
+      case 'new':
+        filtered = [...tokens].sort((a, b) => b.createdAt - a.createdAt)
+        break
+      case 'popular':
+        filtered = [...tokens].sort((a, b) => parseFloat(b.fundingRaised) - parseFloat(a.fundingRaised))
+        break
+      case 'myTokens':
+        if (address) {
+          filtered = tokens.filter((token) => 
+            token.creatorAddress.toLowerCase() === address.toLowerCase()
+          )
+        }
+        break
+      // 'all' case is not needed as it's the default state of 'filtered'
     }
 
     filtered = filtered.filter(token => {
@@ -145,19 +159,13 @@ export default function ExplorePage() {
               icon={<Sparkles size={16} />}
               label="New"
               isActive={activeFilter === 'new'}
-              onClick={() => setActiveFilter('new')}
+              onClick={() => setActiveFilter(prevFilter => prevFilter === 'new' ? 'all' : 'new')}
             />
             <FilterButton
               icon={<Flame size={16} />}
               label="Popular"
               isActive={activeFilter === 'popular'}
-              onClick={() => setActiveFilter('popular')}
-            />
-            <FilterButton
-              icon={<TrendingUp size={16} />}
-              label="Trending"
-              isActive={activeFilter === 'trending'}
-              onClick={() => setActiveFilter('trending')}
+              onClick={() => setActiveFilter(prevFilter => prevFilter === 'popular' ? 'all' : 'popular')}
             />
             <FilterButton
               icon={<Wallet size={16} />}
