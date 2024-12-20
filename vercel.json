@@ -5,8 +5,8 @@
       "maxDuration": 60
     }
   },
-  "env": {
-    "NEXT_PUBLIC_IDEOGRAM_API_KEY": "@next_public_ideogram_api_key"
+ "env": {
+    "NEXT_PUBLIC_IDEOGRAM_API_KEY": "${NEXT_PUBLIC_IDEOGRAM_API_KEY}"
   }
 }
 
