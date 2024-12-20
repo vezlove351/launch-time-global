@@ -39,7 +39,7 @@ export function Header() {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-gray-900">
+            <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-gray-900 flex flex-col">
             <Link href="/" className="text-2xl font-bold text-white flex items-center gap-2">
           <Rocket className="w-6 h-6" />
           Launch Time
@@ -56,16 +56,16 @@ export function Header() {
                   AI Agents <span className="text-sm ml-4 bg-[#4F46E5] pl-2 pr-2 rounded-sm">next release</span>
                 </Link>
               </nav>
-              <div className="mt-6">
+              <div className="mt-auto">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center text-white px-3 py-2 rounded w-full"
+                  className="flex items-center justify-between text-white bg-gray-800 px-4 py-2 rounded w-full mb-2"
                 >
                   Ethereum
-                  <ChevronDown className="ml-auto h-4 w-4" />
+                  <ChevronDown className="h-4 w-4" />
                 </button>
                 {isDropdownOpen && (
-                  <div className="mt-2 w-full bg-gray-700 rounded-md shadow-lg">
+                  <div className="w-full bg-gray-700 rounded-md shadow-lg mb-4">
                     <ul className="py-1">
                       {blockchains.map((chain) => (
                         <li key={chain.name}>
@@ -132,7 +132,7 @@ export function Header() {
             </div>
           </div>
           {isMounted && (
-            <div className="items-center" suppressHydrationWarning>
+            <div className="hidden md:flex items-center" suppressHydrationWarning>
               <ConnectButton client={client} />
             </div>
           )}
