@@ -132,7 +132,7 @@ export function Header() {
             </div>
           </div>
           {isMounted && (
-            <div className="hidden md:flex items-center" suppressHydrationWarning>
+            <div className="items-center" suppressHydrationWarning>
               <ConnectButton client={client} />
             </div>
           )}

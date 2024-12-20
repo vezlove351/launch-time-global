@@ -1,6 +1,7 @@
 import "./globals.css"
 import { Outfit } from 'next/font/google'
-import { ThirdwebProvider } from "thirdweb/react";
+import { ThirdwebProvider } from "thirdweb/react"
+
 
 const outfit = Outfit({ subsets: ["latin"] })
 
