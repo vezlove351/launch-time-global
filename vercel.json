@@ -1,11 +1,12 @@
 {
-    "functions": {
-      "app/api/generate-image/route.ts": {
-        "maxDuration": 60
-      }
-    },
-    "env": {
-      "NEXT_PUBLIC_IDEOGRAM_API_KEY": "@ideogram_api_key"
+  "version": 2,
+  "functions": {
+    "app/api/generate-image/route.ts": {
+      "maxDuration": 60
     }
+  },
+  "env": {
+    "NEXT_PUBLIC_IDEOGRAM_API_KEY": "@next_public_ideogram_api_key"
   }
-  
+}
+

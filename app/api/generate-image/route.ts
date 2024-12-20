@@ -12,11 +12,14 @@ export async function POST(req: Request) {
 
     if (!ideogramApiKey) {
       console.error('Ideogram API key is not configured')
-      return NextResponse.json({ error: 'Ideogram API key is not configured' }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Ideogram API key is not configured' }, 
+        { status: 500 }
+      )
     }
 
     console.log('Sending request to Ideogram API...')
-    const url = 'https://api.ideogram.ai/generate';
+    const url = 'https://api.ideogram.ai/generate'
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -36,20 +39,30 @@ export async function POST(req: Request) {
     if (!response.ok) {
       const errorData = await response.text()
       console.error('Ideogram API error:', errorData)
-      return NextResponse.json({ error: `Ideogram API error: ${errorData}` }, { status: response.status })
+      return NextResponse.json(
+        { error: `Ideogram API error: ${errorData}` }, 
+        { status: response.status }
+      )
     }
 
-    const data = await response.json();
+    const data = await response.json()
     if (!data.data || !data.data[0] || !data.data[0].url) {
-      console.error('Unexpected response from Ideogram API:', data);
-      return NextResponse.json({ error: 'Ideogram API did not return an image URL' }, { status: 500 });
+      console.error('Unexpected response from Ideogram API:', data)
+      return NextResponse.json(
+        { error: 'Ideogram API did not return an image URL' }, 
+        { status: 500 }
+      )
     }
 
     console.log('Successfully generated image URL:', data.data[0].url)
     return NextResponse.json({ imageUrl: data.data[0].url })
   } catch (error) {
     console.error('Error generating image:', error)
-    return NextResponse.json({ error: 'Failed to generate image' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    return NextResponse.json(
+      { error: 'Failed to generate image', details: errorMessage }, 
+      { status: 500 }
+    )
   }
 }
 
