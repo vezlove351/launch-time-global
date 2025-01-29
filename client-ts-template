@@ -1,4 +1,4 @@
-import { createThirdwebClient, getContract } from "thirdweb";
+/* import { createThirdwebClient, getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 
 // Create the client with your clientId
@@ -17,6 +17,8 @@ export const chains = {
 };
 
 export type ChainKey = keyof typeof chains;
+
+
 
 // Function to get contract based on the chain
 export const getContractForChain = (chainKey: ChainKey) => {
@@ -57,26 +59,7 @@ export const getContractForChain = (chainKey: ChainKey) => {
   });
 };
 
-// Function to get RPC URL for a chain
-export const getRpcUrlForChain = (chainKey: ChainKey): string => {
-  switch (chainKey) {
-    case 'ethereum':
-      return process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL as string;
-    case 'optimism':
-      return process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL as string;
-    case 'base':
-      return process.env.NEXT_PUBLIC_BASE_RPC_URL as string;
-    case 'avalanche':
-      return process.env.NEXT_PUBLIC_AVALANCHE_RPC_URL as string;
-    case 'bsc':
-      return process.env.NEXT_PUBLIC_BSC_RPC_URL as string;
-    case 'arbitrum':
-      return process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL as string;
-    default:
-      throw new Error(`No RPC URL configured for chain ${chainKey}`);
-  }
-};
-
 // Default contract (Ethereum Mainnet)
 export const contract = getContractForChain('ethereum');
 
+ */

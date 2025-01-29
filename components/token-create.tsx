@@ -7,9 +7,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { createMemeToken } from '@/utils/contract'
 import { useToast } from "@/hooks/use-toast"
 import Image from 'next/image'
+import { getContractForChain, ChainKey } from "@/app/client"
+import { prepareContractCall } from "thirdweb"
+import { useSendTransaction } from "thirdweb/react"
+import { ethers } from 'ethers'
 
 interface TokenDetails {
   name: string;
@@ -22,9 +25,23 @@ interface TokenCreationFormProps {
   onTokenCreated: (tokenDetails: TokenDetails) => void;
   onFormChange: (tokenDetails: TokenDetails) => void;
   initialTokenDetails: TokenDetails;
+  selectedNetwork: {
+    name: string;
+    id: string;
+    networkId: string;
+  };
+  creationFee: string;
+  fundingTarget: string;
 }
 
-export default function TokenCreationForm({ onTokenCreated, onFormChange, initialTokenDetails }: TokenCreationFormProps) {
+export default function TokenCreationForm({ 
+  onTokenCreated, 
+  onFormChange, 
+  initialTokenDetails, 
+  selectedNetwork,
+  creationFee,
+  fundingTarget
+}: TokenCreationFormProps) {
   const [formData, setFormData] = useState<TokenDetails>(initialTokenDetails)
   const [isLoading, setIsLoading] = useState(false)
   const [useAIGeneration, setUseAIGeneration] = useState(false)
@@ -32,6 +49,7 @@ export default function TokenCreationForm({ onTokenCreated, onFormChange, initia
   const [generatedImageUrl, setGeneratedImageUrl] = useState('')
   const { toast } = useToast()
   const router = useRouter()
+  const { mutate: sendTransaction } = useSendTransaction()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -88,32 +106,47 @@ export default function TokenCreationForm({ onTokenCreated, onFormChange, initia
     setIsLoading(true)
     try {
       const imageUrlToUse = useAIGeneration ? generatedImageUrl : formData.imageUrl
-      const txHash = await createMemeToken(
-        formData.name,
-        formData.symbol,
-        imageUrlToUse,
-        formData.description
-      )
-      toast({
-        title: "MemeToken Created!",
-        description: `Transaction Hash: ${txHash}`,
-      })
-      // Notify parent component
-      onTokenCreated({ ...formData, imageUrl: imageUrlToUse })
-      // Reset form
-      const resetFormData = { name: '', symbol: '', description: '', imageUrl: '' }
-      setFormData(resetFormData)
-      onFormChange(resetFormData)
-      setAiPrompt('')
-      setGeneratedImageUrl('')
+      const contract = getContractForChain(selectedNetwork.networkId.toLowerCase() as ChainKey)
       
-      // Redirect to home page
-      router.push('/')
+      const transaction = prepareContractCall({
+        contract,
+        method: "function createMemeToken(string name, string symbol, string imageUrl, string description) payable returns (address)",
+        params: [formData.name, formData.symbol, imageUrlToUse, formData.description],
+        value: ethers.parseEther(creationFee.split(' ')[0]),
+      })
+
+      sendTransaction(transaction, {
+        onSuccess: (result) => {
+          toast({
+            title: "MemeToken Created!",
+            description: `Transaction Hash: ${result.transactionHash}`,
+          })
+          // Notify parent component
+          onTokenCreated({ ...formData, imageUrl: imageUrlToUse })
+          // Reset form
+          const resetFormData = { name: '', symbol: '', description: '', imageUrl: '' }
+          setFormData(resetFormData)
+          onFormChange(resetFormData)
+          setAiPrompt('')
+          setGeneratedImageUrl('')
+          
+          // Redirect to home page
+          router.push('/')
+        },
+        onError: (error) => {
+          console.error('Error creating token:', error)
+          toast({
+            title: "Error",
+            description: `Failed to create MemeToken. Please ensure you have enough ${creationFee.split(' ')[1]} to cover the creation fee and gas costs.`,
+            variant: "destructive",
+          })
+        },
+      })
     } catch (error) {
       console.error('Error creating token:', error)
       toast({
         title: "Error",
-        description: "Failed to create MemeToken. Please try again.",
+        description: `Failed to create MemeToken. Please ensure you have enough ${creationFee.split(' ')[1]} to cover the creation fee and gas costs.`,
         variant: "destructive",
       })
     } finally {
@@ -124,38 +157,38 @@ export default function TokenCreationForm({ onTokenCreated, onFormChange, initia
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="name" className="block text-sm font-medium text-white mb-1">Token Name</Label>
+        <Label htmlFor="name" className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Token Name</Label>
         <Input
           id="name"
           name="name"
           value={formData.name}
           onChange={handleChange}
           placeholder="Enter token name"
-          className="bg-gray-700 text-white border-gray-600"
+          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
           required
         />
       </div>
       <div>
-        <Label htmlFor="symbol" className="block text-sm font-medium text-white mb-1">Token Symbol</Label>
+        <Label htmlFor="symbol" className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Token Symbol</Label>
         <Input
           id="symbol"
           name="symbol"
           value={formData.symbol}
           onChange={handleChange}
           placeholder="Enter token symbol"
-          className="bg-gray-700 text-white border-gray-600"
+          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
           required
         />
       </div>
       <div>
-        <Label htmlFor="description" className="block text-sm font-medium text-white mb-1">Description</Label>
+        <Label htmlFor="description" className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Description</Label>
         <Textarea
           id="description"
           name="description"
           value={formData.description}
           onChange={handleChange}
           placeholder="Enter token description"
-          className="bg-gray-700 text-white border-gray-600"
+          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
           required
         />
       </div>
@@ -165,18 +198,18 @@ export default function TokenCreationForm({ onTokenCreated, onFormChange, initia
           checked={useAIGeneration}
           onCheckedChange={setUseAIGeneration}
         />
-        <Label htmlFor="use-ai" className="text-white">Use AI Image Generation</Label>
+        <Label htmlFor="use-ai" className="text-gray-900 dark:text-white">Use AI Image Generation</Label>
       </div>
       {useAIGeneration ? (
         <div>
-          <Label htmlFor="ai-prompt" className="block text-sm font-medium text-white mb-1">AI Image Prompt</Label>
+          <Label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-900 dark:text-white mb-1">AI Image Prompt</Label>
           <div className="flex space-x-2">
             <Input
               id="ai-prompt"
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               placeholder="Describe the image you want to generate"
-              className="bg-gray-700 text-white border-gray-600 flex-grow"
+              className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 flex-grow"
             />
             <Button 
               type="button" 
@@ -190,7 +223,7 @@ export default function TokenCreationForm({ onTokenCreated, onFormChange, initia
         </div>
       ) : (
         <div>
-          <Label htmlFor="imageUrl" className="block text-sm font-medium text-white mb-1">Image URL</Label>
+          <Label htmlFor="imageUrl" className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Image URL</Label>
           <Input
             id="imageUrl"
             name="imageUrl"
@@ -198,17 +231,18 @@ export default function TokenCreationForm({ onTokenCreated, onFormChange, initia
             value={formData.imageUrl}
             onChange={handleChange}
             placeholder="Enter image URL"
-            className="bg-gray-700 text-white border-gray-600"
+            className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
             required={!useAIGeneration}
           />
         </div>
       )}
+     
       <Button 
         type="submit" 
-        className="w-full bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-lg py-6 mt-8"
+        className="w-full bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-lg text-white py-6 mt-8 rounded-full"
         disabled={isLoading || (useAIGeneration && !generatedImageUrl)}
       >
-        {isLoading ? 'Creating Token...' : 'Create Token'}
+        {isLoading ? 'Creating Token...' : `Create Token on ${selectedNetwork.name}`}
       </Button>
     </form>
   )

@@ -6,6 +6,7 @@ import { Copy } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from "@/context/ThemeContext"
+import { useNetwork } from '@/context/network'
 
 interface MemeToken {
   name: string
@@ -21,6 +22,7 @@ export function TokenCard({ token }: { token: MemeToken }) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [imgSrc, setImgSrc] = useState(token.tokenImageUrl || '/placeholder.svg')
   const { theme } = useTheme()
+  const { chain } = useNetwork()
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -29,7 +31,7 @@ export function TokenCard({ token }: { token: MemeToken }) {
   }
 
   return (
-    <Link href={`/token/${token.tokenAddress}`} passHref>
+    <Link href={`/token/${token.tokenAddress}?network=${chain}`} passHref>
       <Card className={`p-6 ${theme === 'dark' ? 'bg-gray-800/50 hover:bg-gray-700/50' : 'bg-white hover:bg-gray-100'} border-1 rounded-2xl flex flex-col transition-colors`}>
         <div className="flex items-center gap-4 mb-4">
           <div className="relative w-12 h-12">

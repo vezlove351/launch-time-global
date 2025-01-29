@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useReadContract } from "thirdweb/react"
 import { getContractForChain, chains, ChainKey } from "@/app/client";
 import { useTheme } from "@/context/ThemeContext"
+import { useNetwork } from '@/context/network'
 
 interface Token {
   name: string;
@@ -46,13 +47,14 @@ function useAddress() {
   return address
 }
 
-export default function TestPage() {
+export default function ExplorePage() {
   const [filteredTokens, setFilteredTokens] = useState<Token[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterType>('new')
   const { toast } = useToast()
   const address = useAddress()
   const { theme } = useTheme()
+  const { chain } = useNetwork()
 
   return (
     <Header>
@@ -127,7 +129,7 @@ export default function TestPage() {
               ? 'bg-gradient-to-br from-[#2A2F4E] to-[#1A2435]'
               : 'bg-gradient-to-br from-[#FFFFFF] to-[#F0F2F5]'
             }`}>
-            <main className="flex-grow container px-4 mx-auto max-w-6xl py-16 text-gray-900 dark:white">
+            <main className="flex-grow container px-4 mx-auto max-w-6xl py-16 text-gray-900 dark:text-white">
               <div className="flex flex-col md:flex-row justify-between items-center mb-8">
                 <h1 className="text-4xl font-bold mb-4 md:mb-0 text-gray-900 dark:text-white">Community tokens on {selectedNetwork.name}</h1>
                 <div className="flex space-x-2 items-center">

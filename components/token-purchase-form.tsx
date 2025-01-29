@@ -1,70 +1,61 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { ethers } from 'ethers'
-import { buyMemeToken, calculateCost } from '@/utils/contract'
+import { ethers } from "ethers"
+import { prepareContractCall } from "thirdweb"
+import { useSendTransaction, useReadContract } from "thirdweb/react"
+import { useTheme } from "@/context/ThemeContext"
+import { getContractForChain, type ChainKey } from "@/app/client"
 
 interface TokenPurchaseFormProps {
   tokenSymbol: string
   tokenAddress: string
   totalSupply: string
+  network: ChainKey
 }
 
-export function TokenPurchaseForm({ tokenSymbol, tokenAddress, totalSupply }: TokenPurchaseFormProps) {
-  const [amount, setAmount] = useState('200')
-  const [cost, setCost] = useState('')
+export function TokenPurchaseForm({ tokenSymbol, tokenAddress, totalSupply, network }: TokenPurchaseFormProps) {
+  const [amount, setAmount] = useState("200")
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const { theme } = useTheme()
+  const { mutate: sendTransaction } = useSendTransaction()
 
-  const updateCost = useCallback(async (amount: string) => {
-    if (!amount) {
-      setCost('')
-      return
-    }
-    try {
-      const costInWei = await calculateCost(totalSupply, amount)
-      setCost(ethers.formatUnits(costInWei, 'ether'))
-    } catch (error) {
-      console.error('Error calculating cost:', error)
-      toast({
-        title: "Error",
-        description: "Failed to calculate cost. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }, [totalSupply, toast])
+  const contract = getContractForChain(network)
 
-  useEffect(() => {
-    updateCost(amount)
-  }, [amount, updateCost])
+  const { data: costData, isLoading: isCostLoading } = useReadContract({
+    contract,
+    method: "function calculateCost(uint256 currentSupply, uint256 tokensToBuy) pure returns (uint256)",
+    params: [BigInt(totalSupply), BigInt(amount)],
+  })
 
-  useEffect(() => {
-    updateCost('200')
-  }, [updateCost])
+  const cost = costData ? ethers.formatUnits(costData, "ether") : ""
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     try {
-      const txHash = await buyMemeToken(tokenAddress, amount)
-      toast({
-        title: "Purchase Successful",
-        description: `Transaction hash: ${txHash}`,
+      const transaction = prepareContractCall({
+        contract,
+        method: "function buyMemeToken(address memeTokenAddress, uint256 tokenQty) payable returns (uint256)",
+        params: [tokenAddress, BigInt(amount)],
+        value: costData, // Use the calculated cost as the value to send
       })
-      setAmount('')
-      setCost('')
+
+      await sendTransaction(transaction)
+
+      toast({
+        title: "Purchase Initiated",
+        description: "Transaction submitted successfully",
+      })
+
+      setAmount("")
     } catch (error: any) {
-      console.error('Error purchasing token:', error)
-      let errorMessage = "Failed to purchase token. Please try again."
-      if (error.message.includes("Invalid token data structure")) {
-        errorMessage = "There was an issue with the token data. Please try again later."
-      } else if (error.message.includes("Failed to fetch total supply")) {
-        errorMessage = "Unable to retrieve token supply information. Please try again later."
-      }
+      console.error("Error purchasing token:", error)
       toast({
         title: "Error",
-        description: errorMessage,
+        description: error.message || "Failed to purchase token. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -73,34 +64,33 @@ export function TokenPurchaseForm({ tokenSymbol, tokenAddress, totalSupply }: To
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-800/50 rounded-2xl p-6 space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className={`${theme === "light" ? "bg-gray-100" : "bg-gray-800/50"} rounded-2xl p-6 space-y-4`}
+    >
       <div>
-        <h2 className="text-2xl font-bold text-white mb-4">Buy token</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Buy token</h2>
         <Input
           id="amount"
           type="number"
           placeholder="Enter amount of tokens to buy"
           value={amount}
-          onChange={(e) => {
-            setAmount(e.target.value)
-            updateCost(e.target.value)
-          }}
-          className="bg-gray-700 text-white border-gray-600"
+          onChange={(e) => setAmount(e.target.value)}
           required
         />
       </div>
       {cost && (
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-400">Estimated Cost:</span>
-          <span className="text-sm text-white">{cost} ETH</span>
+          <span className={`text-sm ${theme === "light" ? "text-gray-900" : "text-white"}`}>{cost} ETH</span>
         </div>
       )}
-      <Button 
-        type="submit" 
-        className="w-full bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-lg py-6"
-        disabled={isLoading || !cost}
+      <Button
+        type="submit"
+        className="w-full bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-lg py-6 rounded-full"
+        disabled={isLoading || isCostLoading || !cost}
       >
-        {isLoading ? 'Processing...' : `Buy ${tokenSymbol} Tokens`}
+        {isLoading ? "Processing..." : `Buy ${tokenSymbol} Tokens`}
       </Button>
     </form>
   )
