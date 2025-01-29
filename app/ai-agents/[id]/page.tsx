@@ -93,7 +93,9 @@ export default function NFTDetailPage() {
   if (!nft) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#2A2F4E] to-[#1A2435] flex flex-col">
-        <Header />
+        <Header>
+          {() => null}
+        </Header>
         <main className="flex-grow container px-4 mx-auto max-w-6xl py-16">
           <div className="text-white text-center">NFT not found</div>
         </main>
@@ -104,7 +106,9 @@ export default function NFTDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2A2F4E] to-[#1A2435] flex flex-col">
-      <Header />
+      <Header>
+        {() => null}
+      </Header>
       <main className="flex-grow container px-4 mx-auto max-w-6xl py-16">
         <div className="flex flex-col lg:flex-row gap-8 mb-8">
           {/* Left column - NFT Image and Details */}
